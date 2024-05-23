@@ -7,10 +7,8 @@ from . import _color as mycol
 
 def draw_legend(data, obj):
     """Adds legend code."""
-    texts = []
     children_alignment = []
     for text in obj.texts:
-        texts.append(f"{text.get_text()}")
         children_alignment.append(f"{text.get_horizontalalignment()}")
 
     # Get the location.
@@ -78,8 +76,13 @@ def draw_legend(data, obj):
     if alignment:
         data["current axes"].axis_options.append(f"legend cell align={{{alignment}}}")
 
-    if obj._ncol != 1:
-        data["current axes"].axis_options.append(f"legend columns={obj._ncol}")
+    try:
+        ncols = obj._ncols
+    except AttributeError:
+        # backwards-compatibility with matplotlib < 3.6.0
+        ncols = obj._ncol
+    if ncols != 1:
+        data["current axes"].axis_options.append(f"legend columns={ncols}")
 
     # Write styles to data
     if legend_style:

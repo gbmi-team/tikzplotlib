@@ -7,7 +7,12 @@ from . import _color as mycol
 from . import _files
 from . import _path as mypath
 from ._markers import _mpl_marker2pgfp_marker
-from ._util import get_legend_text, has_legend, transform_to_data_coordinates
+from ._util import (
+    _common_texification,
+    get_legend_text,
+    has_legend,
+    transform_to_data_coordinates,
+)
 
 
 def draw_line2d(data, obj):
@@ -100,7 +105,7 @@ def draw_line2d(data, obj):
     content += c
 
     if legend_text is not None:
-        content.append(f"\\addlegendentry{{{legend_text}}}\n")
+        content.append(f"\\addlegendentry{{{_common_texification(legend_text)}}}\n")
 
     return data, content
 
@@ -259,11 +264,15 @@ def _table(obj, data):  # noqa: C901
         xformat = ff
         col_sep = " "
 
-    if data["table_row_sep"] != "\n":
-        # don't want the \n in the table definition, just in the data (below)
-        opts.append("row sep=" + data["table_row_sep"].strip())
-
     table_row_sep = data["table_row_sep"]
+    if table_row_sep.strip() == r"\\" and data["externalize tables"]:
+        # work around ! Package pgfplots Error: Sorry, the choice 'row sep=crcr' is currently only available for inline tables, not for external files.
+        table_row_sep = "\n"
+
+    if table_row_sep != "\n":
+        # don't want the \n in the table definition, just in the data (below)
+        opts.append("row sep=" + table_row_sep.strip())
+
     ydata[ydata_mask] = np.nan
     if np.any(ydata_mask) or ~np.all(np.isfinite(ydata)):
         # matplotlib jumps at masked or nan values, while PGFPlots by default
